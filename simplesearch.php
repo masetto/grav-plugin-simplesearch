@@ -171,12 +171,9 @@ class SimplesearchPlugin extends Plugin
                         continue;
                     }
 
-                    if ($cpage->modular()) {
-                        $this->collection->remove($cpage);
-                        $parent = $cpage->parent();
-                        $extras[$parent->path()] = ['slug' => $parent->slug()];
-                    }
-
+                    $parent = $this->getModularParent($cpage, $cpage);
+                    if ($parent)
+                      $extras[$parent->path()] = ['slug' => $parent->slug()];
                 }
             }
         }
@@ -212,6 +209,24 @@ class SimplesearchPlugin extends Plugin
         }
     }
 
+    /**
+     * Test if there is modular in page parents and get modular page
+     * 
+     * @param Page $cpage Page object to perform test if it is modular
+     * @param Page $leafPage Original page
+     * 
+     * @return Page The first modular page parent or null if there are not modular pages in parents
+     */
+    protected function getModularParent($cpage, $leafPage) {
+      $parent = null;
+      if ($cpage->modular()) {
+          $this->collection->remove($leafPage);
+          $parent = $cpage->parent();
+      } elseif ($cpage->parent()) {
+        $parent = $this->getModularParent($cpage->parent(), $cpage);
+      }
+      return $parent;
+    }
 
     /**
      * Set needed variables to display the search results.
